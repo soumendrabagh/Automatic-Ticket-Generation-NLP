@@ -1,0 +1,3 @@
+https://www.analyticsvidhya.com/blog/2017/01/ultimate-guide-to-understand-implement-natural-language-processing-codes-in-python/
+https://www.analyticsvidhya.com/blog/2017/10/essential-nlp-guide-data-scientists-top-10-nlp-tasks/
+https://www.analyticsvidhya.com/blog/2020/01/learning-path-nlp-2020/
