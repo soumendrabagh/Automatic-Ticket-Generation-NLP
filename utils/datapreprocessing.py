@@ -65,8 +65,15 @@ def clean_text(text):
     text = re.sub(r"logging", "login", text)
     text = re.sub(r"tologin", "login", text)
 
-    #text = re.sub(r"Job_", "job ", text)
-    #text = re.sub(r"mm_", "mm ", text)
+    text = re.sub(r"Job_", "job ", text)
+    text = re.sub(r"mm_", "mm ", text)
+
+    # 6th June Edit suggested by Charan/Vaishakh
+    text = re.sub(r"time cards", "timecards", text)
+    text = re.sub(r"engg", "engineer", text)
+    text = re.sub(r"nx 9", "nx9", text)
+    text = re.sub(r"installing", "install", text)
+    text = re.sub(r"installation", "install", text)
 
     text = re.sub(r"us time", "US time", text)  
 
