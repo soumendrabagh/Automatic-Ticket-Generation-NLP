@@ -1,5 +1,7 @@
 # Data Preprocessing Util
 import re
+from rake_nltk import Rake
+from gensim.summarization.summarizer import summarize
 
 def removeString(data, regex):
     return data.str.lower().str.replace(regex.lower(), ' ')
@@ -174,3 +176,16 @@ def clean_text(text):
 
     text = re.sub(r"[,.\"\'!@#$%^&*(){}?/;`~:<>+=-]", "", text)
     return text
+
+r = Rake()
+
+def rake_implement(x) :
+    r.extract_keywords_from_text(x)
+    return r.get_ranked_phrases()
+
+
+def create_summarized_feature(x):
+    if len(x) > 200:
+        return summarize(x, word_count = 200)
+    else:
+        return X
