@@ -185,7 +185,15 @@ def rake_implement(x) :
 
 
 def create_summarized_feature(x):
-    if len(x) > 200:
-        return summarize(x, word_count = 200)
-    else:
-        return X
+    str_local = ""
+    try :
+            if len(x.split()) > 200:
+                str_local = summarize(x, word_count = 200)
+            else:
+                str_local = x
+                
+    except ValueError:
+        str_local_Error = ". ".join(rake_implement(x))
+        str_local = summarize(str_local_Error, word_count = 200)
+        print("Can't Summarize this sentence as input has only one sentence. Hence, replacing with (Rake + Summarized Value)" )
+    return str_local
