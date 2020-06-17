@@ -23,24 +23,24 @@
 ####  Pre-Processing, Data Visualization and EDA
 ● Exploring the given Data files <br>
 ● Understanding the structure of data <br>
-● Missing points in data
-● Finding inconsistencies in the data
-● Visualizing different patterns
-● Visualizing different text features
-● Dealing with missing values
-● Text preprocessing
-● Creating word vocabulary from the corpus of report text data
-● Creating tokens as required
+● Missing points in data <br>
+● Finding inconsistencies in the data <br>
+● Visualizing different patterns <br>
+● Visualizing different text features <br>
+● Dealing with missing values <br>
+● Text preprocessing <br>
+● Creating word vocabulary from the corpus of report text data <br>
+● Creating tokens as required <br>
 
 #### Model Building
-● Building a model architecture which can classify.
-● Trying different model architectures by researching state of the art for similar tasks.
-● Train the model
-● To deal with large training time, save the weights so that you can use them when training the model for the second time without starting from scratch.
+● Building a model architecture which can classify. <br>
+● Trying different model architectures by researching state of the art for similar tasks. <br>
+● Train the model <br>
+● To deal with large training time, save the weights so that you can use them when training the model for the second time without starting from scratch. <br>
 
 #### Test the Model, Fine-tuning and Repeat 
-● Test the model and report as per evaluation metrics 
-● Try different models 
-● Try different evaluation metrics 
-● Set different hyper parameters, by trying different optimizers, loss functions, epochs, learning rate, batch size, checkpointing, early stopping etc..for these models to fine-tune them 
-● Report evaluation metrics for these models along with your observation on how changing different hyper parameters leads to change in the final evaluation metric.
+● Test the model and report as per evaluation metrics  <br>
+● Try different models  <br>
+● Try different evaluation metrics  <br>
+● Set different hyper parameters, by trying different optimizers, loss functions, epochs, learning rate, batch size, checkpointing, early stopping etc..for these models to fine-tune them  <br>
+● Report evaluation metrics for these models along with your observation on how changing different hyper parameters leads to change in the final evaluation metric. <br>
