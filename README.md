@@ -18,6 +18,7 @@
 
 ## Approach to solve this problem :
 
+#### Details about the data and dataset files are given in the link, https://drive.google.com/open?id=1OZNJm81JXucV3HmZroMq6qCT2m7ez7IJ
 #### the goal is to build a classifier that can classify the tickets by analyzing text. This can be further broken down into following steps:
 
 ####  Pre-Processing, Data Visualization and EDA
