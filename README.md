@@ -21,8 +21,8 @@
 #### the goal is to build a classifier that can classify the tickets by analyzing text. This can be further broken down into following steps:
 
 ####  Pre-Processing, Data Visualization and EDA
-● Exploring the given Data files
-● Understanding the structure of data
+● Exploring the given Data files <br>
+● Understanding the structure of data <br>
 ● Missing points in data
 ● Finding inconsistencies in the data
 ● Visualizing different patterns
