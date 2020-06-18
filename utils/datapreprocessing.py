@@ -1,5 +1,10 @@
 # Data Preprocessing Util
 import re
+import nltk
+import string
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords
+from nltk.stem.porter import PorterStemmer 
 from rake_nltk import Rake
 from gensim.summarization.summarizer import summarize
 
@@ -44,11 +49,17 @@ def cleanDataset(dataset, column, regex_list):
 
 
 def clean_text(text):
+    # Lowercase all characters in input 'text'
     text = text.lower()
     
+    # Removes any Website URL from text
     pattern = re.compile('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+')
     text = pattern.sub('', text)
+    
+    #Extract 'firstname' from email id : firstname@email.xyz
     text = " ".join(filter(lambda x:x[0]!='@', text.split()))
+    
+    # Remove Emojis
     emoji = re.compile("["
                            u"\U0001F600-\U0001FFFF"  # emoticons
                            u"\U0001F300-\U0001F5FF"  # symbols&  pictographs
@@ -57,51 +68,36 @@ def clean_text(text):
                            u"\U00002702-\U000027B0"
                            u"\U000024C2-\U0001F251"
                            "]+", flags=re.UNICODE)
-    
     text = emoji.sub(r'', text)
-    text = text.lower()
-    text = re.sub(r"log in", "login", text)
+    
+
+    # 6th June Edit Stemming for Login suggestions by Charan/Vaishakh
+    '''text = re.sub(r"log in", "login", text)
     text = re.sub(r"log on", "login", text)
     text = re.sub(r"logon", "login", text)
     text = re.sub(r"logged", "login", text)
-    text = re.sub(r"logging", "login", text)
+    text = re.sub(r"logging", "login", text)'''
     text = re.sub(r"tologin", "login", text)
 
+    # 6th June Edit Lemmitization suggestions by Charan/Vaishakh
     text = re.sub(r"Job_", "job ", text)
     text = re.sub(r"mm_", "mm ", text)
-
-    # 6th June Edit suggested by Charan/Vaishakh
     text = re.sub(r"time cards", "timecards", text)
     text = re.sub(r"engg", "engineer", text)
     text = re.sub(r"nx 9", "nx9", text)
     text = re.sub(r"installing", "install", text)
     text = re.sub(r"installation", "install", text)
-
     text = re.sub(r"us time", "US time", text)  
-
-    text = re.sub(r"i'm", "i am", text)
-    text = re.sub(r"he's", "he is", text)
-    text = re.sub(r"she's", "she is", text)
-    text = re.sub(r"that's", "that is", text)        
-    text = re.sub(r"what's", "what is", text)
-    text = re.sub(r"where's", "where is", text) 
+    
+    # A list of Contractions from http://stackoverflow.com/questions/19790188/expanding-english-language-contractions-in-python
     text = re.sub(r"\'ll", " will", text)  
     text = re.sub(r"\'ve", " have", text)  
     text = re.sub(r"\'re", " are", text)
     text = re.sub(r"\'d", " would", text)
     text = re.sub(r"\'ve", " have", text)
-    text = re.sub(r"won't", "will not", text)
-    text = re.sub(r"don't", "do not", text)
-    text = re.sub(r"did't", "did not", text)
-    text = re.sub(r"can't", "can not", text)
-    text = re.sub(r"it's", "it is", text)
-    text = re.sub(r"couldn't", "could not", text)
-    text = re.sub(r"have't", "have not", text)
-
-    # A list of contractions from http://stackoverflow.com/questions/19790188/expanding-english-language-contractions-in-python
     text = re.sub(r"ain't", "am not", text)
     text = re.sub(r"aren't", "are not", text)
-    text = re.sub(r"can't", "cannot", text)
+    text = re.sub(r"can't", "can not", text)
     text = re.sub(r"can't've", "cannot have", text)
     text = re.sub(r"'cause", "because", text)
     text = re.sub(r"could've", "could have", text)
@@ -114,6 +110,7 @@ def clean_text(text):
     text = re.sub(r"hadn't", "had not", text)
     text = re.sub(r"hadn't've", "had not have", text)
     text = re.sub(r"hasn't", "has not", text)
+    text = re.sub(r"have't", "have not", text)
     text = re.sub(r"haven't", "have not", text)
     text = re.sub(r"he'd", "he would", text)
     text = re.sub(r"he'd've", "he would have", text)
@@ -174,7 +171,17 @@ def clean_text(text):
     text = re.sub(r"you'll", "you will", text)
     text = re.sub(r"you're", "you are", text)
 
+    # Stemming with  PorterStemmer
+    PS = PorterStemmer()
+    tokens = word_tokenize(text)
+    stemmed_tokens = [PS.stem(token) for token in tokens]
+    text = ' '.join(stemmed_tokens)
+
+    # Getting Rid of Punctuations
     text = re.sub(r"[,.\"\'!@#$%^&*(){}?/;`~:<>+=-]", "", text)
+
+    # Final Lowercasing text after conversion
+    text = text.lower()
     return text
 
 r = Rake()
