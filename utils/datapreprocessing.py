@@ -2,9 +2,16 @@
 import re
 import nltk
 import string
+import numpy as np
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
-from nltk.stem.porter import PorterStemmer 
+
+# load nltk's SnowballStemmer as variabled 'stemmer'
+from nltk.stem.snowball import SnowballStemmer
+# from nltk.stem.porter import PorterStemmer 
+
+
+
 from rake_nltk import Rake
 from gensim.summarization.summarizer import summarize
 
@@ -171,10 +178,16 @@ def clean_text(text):
     text = re.sub(r"you'll", "you will", text)
     text = re.sub(r"you're", "you are", text)
 
-    # Stemming with  PorterStemmer
-    PS = PorterStemmer()
+    # Tokenizing and Stemming with  PorterStemmer
+    # stemmer = PorterStemmer()
+    filtered_tokens = []
+
+    stemmer = SnowballStemmer("english")
     tokens = word_tokenize(text)
-    stemmed_tokens = [PS.stem(token) for token in tokens]
+    for token in tokens:
+        if re.search('[a-zA-Z]', token):
+            filtered_tokens.append(token)
+    stemmed_tokens = [stemmer.stem(token) for token in filtered_tokens]
     text = ' '.join(stemmed_tokens)
 
     # Getting Rid of Punctuations
@@ -204,3 +217,23 @@ def create_summarized_feature(x):
         str_local = summarize(str_local_Error, word_count = 200)
         print("Can't Summarize this sentence as input has only one sentence. Hence, replacing with (Rake + Summarized Value)" )
     return str_local
+
+
+def check_label_split(train_y, test_y, label_encoded_dict):
+    # np.setdiff1d(list_2,list_1) yields the elements in 'list_2' that are NOT in 'list_1'
+
+    missing_test_labels = np.setdiff1d(train_y.unique(), test_y.unique())
+    missing_train_labels = np.setdiff1d(test_y.unique(), train_y.unique())
+    
+
+    print("The following Target Labels are missing from Test Data : \n")
+    for value in missing_test_labels:
+        for key, val in label_encoded_dict.items(): 
+         if val == value: 
+             print(key)
+             
+    print("\nThe following Target Labels are missing from Train Data :")
+    for value in missing_train_labels:
+        for key, val in label_encoded_dict.items(): 
+         if val == value: 
+             print(key)
