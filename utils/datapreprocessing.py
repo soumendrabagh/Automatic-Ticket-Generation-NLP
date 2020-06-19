@@ -178,20 +178,32 @@ def clean_text(text):
     text = re.sub(r"you'll", "you will", text)
     text = re.sub(r"you're", "you are", text)
 
+    # Getting Rid of Punctuations
+    text = re.sub(r"[,.\"\'!@#$%^&*(){}?/;`~:<>+=-]", "", text)
+
+    # Remove Emails
+    text = re.sub(r"\S*@\S*\s?", '', text)
+
+    # Remove new line characters
+    text = re.sub('\s+', ' ', text)
+
+    # Remove distracting single quotes
+    text = re.sub("\'", "", text)
+
     # Tokenizing and Stemming with  PorterStemmer
     # stemmer = PorterStemmer()
     filtered_tokens = []
-
+    
     stemmer = SnowballStemmer("english")
     tokens = word_tokenize(text)
     for token in tokens:
         if re.search('[a-zA-Z]', token):
             filtered_tokens.append(token)
     stemmed_tokens = [stemmer.stem(token) for token in filtered_tokens]
+    #Rejoining the Stemmed Tokens back again to form new text
     text = ' '.join(stemmed_tokens)
 
-    # Getting Rid of Punctuations
-    text = re.sub(r"[,.\"\'!@#$%^&*(){}?/;`~:<>+=-]", "", text)
+    
 
     # Final Lowercasing text after conversion
     text = text.lower()
