@@ -8,7 +8,7 @@ from nltk.corpus import stopwords
 
 # load nltk's SnowballStemmer as variabled 'stemmer'
 from nltk.stem.snowball import SnowballStemmer
-# from nltk.stem.porter import PorterStemmer 
+from nltk.stem.porter import PorterStemmer 
 
 
 
@@ -209,6 +209,26 @@ def clean_text(text):
     text = text.lower()
     return text
 
+# Function to remove Stopwords
+def remove_stopwords(df):
+    """ Removes stopwords based on a known set of stopwords
+    available in the nltk package. In addition, we include our
+    made up word in here.
+    """
+    # Luckily nltk already has a set of stopwords that we can remove from the texts.
+    stopwords = nltk.corpus.stopwords.words('english')
+    # we'll add our own special word in here 'qwerty'
+    stopwords.append(our_special_word)
+    stopwords.remove
+
+    df['stopwords_removed'] = list(map(lambda doc:
+                                       [word for word in doc if word not in stopwords],
+                                       df['tokenized_text']))
+
+
+
+###### Function for Implementing Rake
+# Define Rake Model
 r = Rake()
 
 def rake_implement(x) :
@@ -249,3 +269,4 @@ def check_label_split(train_y, test_y, label_encoded_dict):
         for key, val in label_encoded_dict.items(): 
          if val == value: 
              print(key)
+
