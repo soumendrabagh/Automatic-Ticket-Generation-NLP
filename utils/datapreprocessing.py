@@ -270,3 +270,69 @@ def check_label_split(train_y, test_y, label_encoded_dict):
          if val == value: 
              print(key)
 
+def replaceEmailIds(dfColumn):
+    newDF = pd.DataFrame()
+    newDF['datacolumn'] = dfColumn
+    for i, row in newDF.iterrows():
+        #print(i)
+        if pd.notna(newDF.at[i,'datacolumn']):
+            if not re.findall('^[0-9]*$',str(newDF.at[i,'datacolumn'])):
+                lstEmails = re.findall('\S+@\S+', newDF.at[i,'datacolumn'])
+                #print(lstEmails)
+                if lstEmails:
+                    for email in lstEmails: 
+                        newDF['datacolumn'][i] = newDF['datacolumn'][i].replace(email, "emailaddress")
+                        #print(newDF['datacolumn'][i])
+    return newDF['datacolumn']
+
+def applyDetRules(datadf,rulesdf,Description,ShortDescription):
+    datadf['pred_group'] = np.nan
+    for i, row in rulesdf.iterrows():
+        if rulesdf['Short Desc Rule'][i] == 'begins with' and rulesdf['Desc Rule'][i] == 'begins with' and pd.isna(rulesdf['User'][i]):
+            for j, row in datadf.iterrows():
+                if pd.notna(datadf[ShortDescription][j]) and pd.notna(datadf[Description][j]):
+                    if ((datadf[ShortDescription][j].startswith(rulesdf['Short Dec Keyword'][i])) and (datadf[Description][j].startswith(rulesdf['Dec keyword'][i]))):
+                        datadf['pred_group'][j] = rulesdf['Group'][i]
+        if pd.isna(rulesdf['Short Desc Rule'][i]) and rulesdf['Desc Rule'][i] == 'begins with' and pd.notna(rulesdf['User'][i]):
+            for j, row in datadf.iterrows():
+                if pd.notna(datadf[Description][j]) and pd.notna(datadf['Caller'][j]):
+                    if ((datadf[Description][j].startswith(rulesdf['Desc Rule'][i]) and (rulesdf['User'][i] == datadf['Caller'][j]))):
+                        datadf['pred_group'][j] = rulesdf['Group'][i]
+        if rulesdf['Short Desc Rule'][i] == 'contains' and pd.notna(rulesdf['User'][i]):
+            for j, row in datadf.iterrows():
+                if (pd.notna(datadf[ShortDescription][j]) and pd.notna(datadf['Caller'][j])):
+                     if ((rulesdf['Short Dec Keyword'][i] in datadf[ShortDescription][j]) and (rulesdf['User'][i] == datadf['Caller'][j])):
+                        datadf['pred_group'][j] = rulesdf['Group'][i]
+        if rulesdf['Short Desc Rule'][i] == 'contains' and pd.isna(rulesdf['Desc Rule'][i]) and pd.isna(rulesdf['User'][i]):
+            for j, row in datadf.iterrows():
+                #print(j)
+                if pd.notna(datadf[ShortDescription][j]):
+                    if (rulesdf['Short Dec Keyword'][i] in datadf[ShortDescription][j]):
+                        datadf['pred_group'][j] = rulesdf['Group'][i]
+        if pd.isna(rulesdf['Short Desc Rule'][i]) and rulesdf['Desc Rule'][i] == 'begins with' and pd.isna(rulesdf['User'][i]):
+            for j, row in datadf.iterrows():
+                if pd.notna(datadf[Description][j]):
+                    if (datadf[Description][j].startswith(rulesdf['Dec keyword'][i])):
+                        datadf['pred_group'][j] = rulesdf['Group'][i]
+        if pd.isna(rulesdf['Short Desc Rule'][i]) and rulesdf['Desc Rule'][i] == 'contains' and pd.isna(rulesdf['User'][i]):
+            for j, row in datadf.iterrows():
+                if pd.notna(datadf[Description][j]):
+                    if (rulesdf['Dec keyword'][i] in datadf[Description][j]):
+                        datadf['pred_group'][j] = rulesdf['Group'][i]
+        #hardcoding GRP25
+        for j, row in datadf.iterrows():
+            if pd.notna(datadf[ShortDescription][j]):
+                if (('erp' in datadf[ShortDescription][j]) and (('EU_tool' in datadf[ShortDescription][j]))):
+                        datadf['pred_group'][j] = 'GRP_25'
+
+        #Hardcoding GRP17
+        for j, row in datadf.iterrows():
+            if pd.notna(datadf[Description][j]):
+                if (datadf[Description][j] == 'the'):
+                        datadf['pred_group'][j] = 'GRP_17' 
+                if (('finance_app' in datadf[ShortDescription][j]) and ('HostName_1132' not in datadf[ShortDescription][j])):
+                    datadf['pred_group'][j] = 'GRP_55'
+                if (('processor' in datadf[Description][j]) and ('engg' in datadf[Description][j])):
+                    datadf['pred_group'][j] = 'GRP_58'
+
+    return datadf
