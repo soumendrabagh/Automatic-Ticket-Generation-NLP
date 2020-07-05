@@ -1,3 +1,5 @@
+import pandas as pd
+
 # Data Preprocessing Util
 import re
 import nltk
@@ -10,10 +12,23 @@ from nltk.corpus import stopwords
 from nltk.stem.snowball import SnowballStemmer
 from nltk.stem.porter import PorterStemmer 
 
+# Import dependencies for Clsutering and PCA
+from gensim.models import Word2Vec
+from sklearn.cluster import KMeans
+from sklearn import cluster 
+from sklearn import metrics
+from sklearn.decomposition import PCA
+from scipy.cluster import hierarchy
+from sklearn.cluster import AgglomerativeClustering
 
-
+# For Rake used in filling missing values
 from rake_nltk import Rake
+
+# For Reducing longer text values to limited so that maxlen can be limited for the corpus
 from gensim.summarization.summarizer import summarize
+
+# Dependencies for Upsampling
+from imblearn.over_sampling import RandomOverSampler
 
 def removeString(data, regex):
     return data.str.lower().str.replace(regex.lower(), ' ')
@@ -288,6 +303,24 @@ def replaceEmailIds(dfColumn):
 def applyDetRules(datadf,rulesdf,Description,ShortDescription):
     datadf['pred_group'] = np.nan
     for i, row in rulesdf.iterrows():
+         #hardcoding GRP25
+        for j, row in datadf.iterrows():
+            if pd.notna(datadf[ShortDescription][j]):
+                if (('erp' in datadf[ShortDescription][j]) and (('EU_tool' in datadf[ShortDescription][j]))):
+                        datadf['pred_group'][j] = 'GRP_25'
+
+        #Hardcoding GRP17
+        for j, row in datadf.iterrows():
+            if pd.notna(datadf[Description][j]):
+                if (datadf[Description][j] == 'the'):
+                        datadf['pred_group'][j] = 'GRP_17' 
+                #Hardcoding GRP55
+                if (('finance_app' in datadf[ShortDescription][j]) and ('HostName_1132' not in datadf[ShortDescription][j])):
+                    datadf['pred_group'][j] = 'GRP_55'
+                #Hardcoding GRP58
+                if (('processor' in datadf[Description][j]) and ('engg' in datadf[Description][j])):
+                    datadf['pred_group'][j] = 'GRP_58'
+                    
         if rulesdf['Short Desc Rule'][i] == 'begins with' and rulesdf['Desc Rule'][i] == 'begins with' and pd.isna(rulesdf['User'][i]):
             for j, row in datadf.iterrows():
                 if pd.notna(datadf[ShortDescription][j]) and pd.notna(datadf[Description][j]):
@@ -319,20 +352,121 @@ def applyDetRules(datadf,rulesdf,Description,ShortDescription):
                 if pd.notna(datadf[Description][j]):
                     if (rulesdf['Dec keyword'][i] in datadf[Description][j]):
                         datadf['pred_group'][j] = rulesdf['Group'][i]
-        #hardcoding GRP25
-        for j, row in datadf.iterrows():
-            if pd.notna(datadf[ShortDescription][j]):
-                if (('erp' in datadf[ShortDescription][j]) and (('EU_tool' in datadf[ShortDescription][j]))):
-                        datadf['pred_group'][j] = 'GRP_25'
-
-        #Hardcoding GRP17
-        for j, row in datadf.iterrows():
-            if pd.notna(datadf[Description][j]):
-                if (datadf[Description][j] == 'the'):
-                        datadf['pred_group'][j] = 'GRP_17' 
-                if (('finance_app' in datadf[ShortDescription][j]) and ('HostName_1132' not in datadf[ShortDescription][j])):
-                    datadf['pred_group'][j] = 'GRP_55'
-                if (('processor' in datadf[Description][j]) and ('engg' in datadf[Description][j])):
-                    datadf['pred_group'][j] = 'GRP_58'
+       
 
     return datadf
+
+
+def divide_group_0(translated_df):
+    #Create an index column 
+    translated_df["index"]=translated_df.index.values
+
+    translated_df_Grp0 = translated_df[["Assignment group","Translated_Description","Translated_Short description","index"]].where(translated_df["Assignment group"]=="GRP_0")
+
+    translated_df_Grp0.dropna(how="all")
+    translated_df_Grp0 = translated_df_Grp0.dropna()
+    translated_df_Grp0["index"] = translated_df_Grp0["index"].astype(int)
+    #translated_df_Grp0.tail(5)
+
+    m=Word2Vec(translated_df_Grp0["Translated_Description"],size=200,min_count=1,sg=1)
+    def vectorizer(sent,m):
+        vec=[]
+        numw=0
+        for w in sent:
+            try:
+                if numw==0:
+                    vec=m[w]
+                else:
+                    vec=np.add(vec,m[w])
+                numw+=1
+            except:
+                pass
+
+            return np.asarray(vec)/numw
+    l=[]
+    for i in translated_df_Grp0["Translated_Description"]:
+        l.append(vectorizer(i,m))
+    X=np.array(l)
+
+    # Using KMeans clustering to find sub-clusters within Group_0 Rows
+    n_clusters=8
+    clf=KMeans(n_clusters=n_clusters, max_iter=100,init='k-means++',n_init=1)
+    labels=clf.fit_predict(X)
+
+    translated_df_Grp0["New Assignment grp"]= "0"
+
+    a=0
+    for index_label, row in translated_df_Grp0.iterrows():
+        translated_df_Grp0.at[index_label,'New Assignment grp'] = "GRP_0"+"_"+str(labels[a])
+        a=a+1
+
+    # translated_df_Grp0["New Assignment grp"].value_counts().to_list()
+
+    # Changing Group_0 values to new labels at their respective indices
+    for index_label, row in translated_df_Grp0.iterrows():
+        val=translated_df_Grp0.at[index_label,'index']
+        val=val.astype(int)
+        translated_df.at[val , 'Assignment group'] = translated_df_Grp0.at[index_label,'New Assignment grp']
+
+'''
+def upsample_df(translated_df):
+
+    temp_Group_0_df = translated_df[translated_df['Assignment group'] == 'GRP_0']
+
+    temp_df = translated_df[translated_df['Assignment group'] != 'GRP_0']
+    remove_columns_list = ['Short description', 'Description', 'Caller', 'target',
+            'Raked Short description', 'Raked Description', 'Iso_Description',
+            'Language_Description', 'Translated_Description',
+            'Iso_Short description', 'Language_Short description',
+            'Translated_Short description',
+            'Length of Translated_Description Before Summarization',
+            'Length of Translated_Short description Before Summarization',
+            'Summarized_Translated_Description',
+            'Length of Translated_Description After Summarization' ]
+    
+    # Renaming Assignmet group and Complete_description to target and data
+    temp_df.columns = ['Short description', 'Description', 'Caller', 'target',
+            'Raked Short description', 'Raked Description', 'Iso_Description',
+            'Language_Description', 'Translated_Description',
+            'Iso_Short description', 'Language_Short description',
+            'Translated_Short description',
+            'Length of Translated_Description Before Summarization',
+            'Length of Translated_Short description Before Summarization',
+            'Summarized_Translated_Description',
+            'Length of Translated_Description After Summarization',
+            'data']
+
+    # Upsampling
+    upsampler = RandomOverSampler(sampling_strategy='auto',random_state=0)
+    X,y = upsampler.fit_sample(temp_df.drop(remove_columns_list,axis=1),temp_df['target'])
+
+    
+    temp_df["Assignment group"] = pd.DataFrame(y)
+    temp_df["Complete_Description"] = pd.DataFrame(X)
+
+    temp_df = temp_df.drop(["target", "data"], axis =1)
+
+    temp_df = temp_df[['Short description', 'Description', 'Caller', 'Assignment group',
+                        'Raked Short description', 'Raked Description', 'Iso_Description',
+                        'Language_Description', 'Translated_Description',
+                        'Iso_Short description', 'Language_Short description',
+                        'Translated_Short description',
+                        'Length of Translated_Description Before Summarization',
+                        'Length of Translated_Short description Before Summarization',
+                        'Summarized_Translated_Description',
+                        'Length of Translated_Description After Summarization',
+                        'Complete_Description']]
+    
+    translated_df = pd.concat([temp_Group_0_df , temp_df])
+    return translated_df
+    '''
+
+    
+
+
+
+
+
+
+
+
